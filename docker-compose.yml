@@ -1,0 +1,65 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: imob
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    volumes:
+      - db:/var/lib/mysql
+    networks:
+      - imobnet
+
+  clone-admin:
+    build: ./app/admin
+    container_name: clone_admin
+    command: /clone/clone.sh
+    volumes:
+      - ./src:/src
+    networks:
+      - imobnet
+
+  clone-imob:
+    build: ./app/imob
+    container_name: clone_imob
+    command: /clone/clone.sh
+    volumes:
+      - ./src:/src
+    networks:
+      - imobnet
+
+  admin_app:
+    build: ./app/admin
+    container_name: admin_app
+    depends_on:
+      - db
+      - clone-admin
+    environment:
+      APP_DIR: /src/admin
+    ports:
+      - "8080:80"
+    networks:
+      - imobnet
+
+  imob_app:
+    build: ./app/imob
+    container_name: imob_app
+    depends_on:
+      - db
+      - clone-imob
+    environment:
+      APP_DIR: /src/imob
+    ports:
+      - "8081:80"
+    networks:
+      - imobnet
+
+volumes:
+  db:
+
+
+networks:
+  imobnet:
+    driver: bridge
